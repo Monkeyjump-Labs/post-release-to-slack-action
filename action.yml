@@ -48,7 +48,10 @@ runs:
             });
           }
 
-          // Set outputs
+          // Escape double quotes in the body (avoid turning \n into \\n so Slack can parse newlines)
+          const rawBody = release.data.body ?? "";
+          const bodyEscaped = rawBody.replace(/"/g, '\\"');
+
           core.setOutput("BODY", bodyEscaped);
           core.setOutput("NAME", release.data.name);
           core.setOutput("URL", release.data.url);

@@ -25,7 +25,7 @@ runs:
       env:
         RELEASE_NUMBER: ${{ inputs.release_number }}
       with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
+        github-token: ${{ inputs.github_token }}
         script: |
           const releaseNumber = process.env.RELEASE_NUMBER;
           console.log(`🔍 Fetching release information for ID: ${releaseNumber}`);

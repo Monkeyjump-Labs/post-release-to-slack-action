@@ -1,0 +1,69 @@
+name: Notify Slack of Release
+description: "Fetch release information by numeric release ID and send a Slack notification with the release details."
+
+inputs:
+  release_number:
+    description: "ID of the release. For example 1.1.205"
+    required: true
+  channel_id:
+    description: "Slack channel ID (e.g. C01234567)."
+    required: true
+  github_token:
+    description: 'GITHUB_TOKEN or a repo scoped PAT'
+    default: ${{ github.token }}
+    required: false
+  slack_bot_token:
+    description: The slack bot token used to post messages
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Get Release Info
+      id: release_info
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.github_token }}
+        RELEASE_NUMBER: ${{ inputs.release_number }}
+      run: |
+        echo "Fetching release information for ID: $RELEASE_NUMBER"
+
+        # Use GH CLI to retrieve release by ID
+        gh release view "$RELEASE_NUMBER" --json body,name,url > RELEASE_NOTES.json
+
+        # Escape double quotes in the body so we can embed it safely in JSON
+        BODY_ESCAPED=$(echo "$RAW_BODY" | sed 's/"/\\"/g; s/$/\\n/g')
+        {
+          echo 'BODY<<EOF'
+          jq "$BODY_ESCAPED"
+          echo 'EOF'
+          echo "NAME=$(jq -r '.name' RELEASE_NOTES.json)"
+          echo "URL=$(jq -r '.url' RELEASE_NOTES.json)"
+        } >> "$GITHUB_OUTPUT"
+
+    - name: Send Slack Notification
+      uses: slackapi/slack-github-action@v2.0.0
+      with:
+        method: chat.postMessage
+        token: ${{ inputs.slack_bot_token }}
+        payload: |
+          {
+            "channel": "${{ inputs.channel_id }}",
+            "text": "🚀 New SmartManagement Release",
+            "blocks": [
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "🚀 *<${{ steps.release_info.outputs.URL }}|${{ steps.release_info.outputs.NAME }}>*"
+                }
+              },
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "${{ steps.release_info.outputs.BODY }}"
+                }
+              }
+            ]
+          }

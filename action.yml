@@ -2,7 +2,7 @@ name: Notify Slack of Release
 description: "Fetch release information by numeric release ID and send a Slack notification with the release details."
 
 inputs:
-  release_tag:
+  release_number:
     description: "ID of the release. For example 1.1.205"
     required: true
   channel_id:
@@ -56,19 +56,26 @@ runs:
         payload: |
           {
             "channel": "${{ inputs.channel_id }}",
-            "text": "🚀 New SmartManagement Release",
+            "text": "🚀 New Release",
             "blocks": [
               {
                 "type": "section",
                 "text": {
-                  "type": "mrkdwn",
-                  "text": "🚀 *<${{ steps.release_info.outputs.URL }}|${{ steps.release_info.outputs.NAME }}>*"
+                  "type": "header",
+                  "text": "🚀 ${{ steps.release_info.outputs.NAME }}"
                 }
               },
               {
                 "type": "section",
                 "text": {
                   "type": "mrkdwn",
+                  "text": "🚀 *<${{ steps.release_info.outputs.URL }}|Github Release Link>*"
+                }
+              },
+              {
+                "type": "section",
+                "text": {
+                  "type": "markdown",
                   "text": "${{ steps.release_info.outputs.BODY }}"
                 }
               }

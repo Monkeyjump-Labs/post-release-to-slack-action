@@ -60,10 +60,7 @@ runs:
             "blocks": [
               {
                 "type": "section",
-                "text": {
-                  "type": "header",
-                  "text": "🚀 ${{ steps.release_info.outputs.NAME }}"
-                }
+                "text": "🚀 ${{ steps.release_info.outputs.NAME }}"
               },
               {
                 "type": "section",
@@ -73,11 +70,8 @@ runs:
                 }
               },
               {
-                "type": "section",
-                "text": {
-                  "type": "markdown",
-                  "text": "${{ steps.release_info.outputs.BODY }}"
-                }
+                "type": "markdown",
+                "text": "${{ steps.release_info.outputs.BODY }}"
               }
             ]
           }

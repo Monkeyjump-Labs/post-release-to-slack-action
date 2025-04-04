@@ -61,7 +61,8 @@ runs:
               {
                 "type": "header",
                 "text": {
-                  "type": "mrkdwn",
+                  "type": "plain_text",
+                  "emoji": true,
                   "text": "🚀 ${{ steps.release_info.outputs.NAME }}"
                 }
               },

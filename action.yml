@@ -62,7 +62,7 @@ runs:
                 "type": "header",
                 "text": {
                   "type": "mrkdwn",
-                  "text": 🚀 ${{ steps.release_info.outputs.NAME }}"}
+                  "text": "🚀 ${{ steps.release_info.outputs.NAME }}"}
                 }
               },
               {

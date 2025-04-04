@@ -3,7 +3,7 @@ description: "Fetch release information by numeric release ID and send a Slack n
 
 inputs:
   release_number:
-    description: "ID of the release. For example 1.1.205"
+    description: "Release ID or Tag (e.g. '210470574' or '1.1.205')"
     required: true
   channel_id:
     description: "Slack channel ID (e.g. C01234567)."
@@ -13,7 +13,7 @@ inputs:
     default: ${{ github.token }}
     required: false
   slack_bot_token:
-    description: The slack bot token used to post messages
+    description: "The slack bot token used to post messages"
     required: true
 
 runs:
@@ -28,26 +28,31 @@ runs:
         github-token: ${{ inputs.github_token }}
         script: |
           const releaseNumber = process.env.RELEASE_NUMBER;
-          console.log(`🔍 Fetching release information for ID: ${releaseNumber}`);
+          console.log(`🔍 Attempting to fetch release by ID or Tag: ${releaseNumber}`);
 
-          // Make the GET /releases/{id} call using Octokit (github-script gives us the pre-authenticated client)
-          const release = await github.rest.repos.getRelease({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            release_id: Number(releaseNumber),
-          });
+          let release;
 
-          // Escape double quotes and newlines in the body
-          const rawBody = release.data.body ?? "";
-          const bodyEscaped = rawBody
-            .replace(/"/g, '\\"')
-            .replace(/\n/g, '\\n');
+          // If purely numeric, treat it as a release ID
+          if (/^\d+$/.test(releaseNumber)) {
+            release = await github.rest.repos.getRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              release_id: Number(releaseNumber),
+            });
+          } else {
+            // Otherwise, assume it's a tag
+            release = await github.rest.repos.getReleaseByTag({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag: releaseNumber,
+            });
+          }
 
           // Set outputs
           core.setOutput("BODY", bodyEscaped);
           core.setOutput("NAME", release.data.name);
           core.setOutput("URL", release.data.url);
-          core.setOutput('REPO_NAME', context.repo.repo);
+          core.setOutput("REPO_NAME", context.repo.repo);
 
     - name: Send Slack Notification
       uses: slackapi/slack-github-action@v2.0.0
@@ -64,7 +69,7 @@ runs:
                 "text": {
                   "type": "plain_text",
                   "emoji": true,
-                  "text": "🚀 New Release: #️⃣h ${{ steps.release_info.outputs.REPO_NAME }} ${{ steps.release_info.outputs.NAME }}"
+                  "text": "🚀 New Release: #️⃣ ${{ steps.release_info.outputs.REPO_NAME }} ${{ steps.release_info.outputs.NAME }}"
                 }
               },
               {

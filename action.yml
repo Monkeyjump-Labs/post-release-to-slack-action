@@ -59,7 +59,7 @@ runs:
             "text": "🚀 New Release",
             "blocks": [
               {
-                "type": "section",
+                "type": "header",
                 "text": "🚀 ${{ steps.release_info.outputs.NAME }}"
               },
               {

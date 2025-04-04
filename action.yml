@@ -64,14 +64,14 @@ runs:
                 "text": {
                   "type": "plain_text",
                   "emoji": true,
-                  "text": "🚀 ${{ steps.release_info.outputs.REPO_NAME }} ${{ steps.release_info.outputs.NAME }}"
+                  "text": "🚀 New Release: #️⃣h ${{ steps.release_info.outputs.REPO_NAME }} ${{ steps.release_info.outputs.NAME }}"
                 }
               },
               {
                 "type": "section",
                 "text": {
                   "type": "mrkdwn",
-                  "text": "🚀 *<${{ steps.release_info.outputs.URL }}|Github Release Link>*"
+                  "text": "🔗 *<${{ steps.release_info.outputs.URL }}|Github Release Link>*"
                 }
               },
               {

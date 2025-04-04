@@ -2,7 +2,7 @@ name: Notify Slack of Release
 description: "Fetch release information by numeric release ID and send a Slack notification with the release details."
 
 inputs:
-  release_number:
+  release_tag:
     description: "ID of the release. For example 1.1.205"
     required: true
   channel_id:
@@ -19,30 +19,34 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
     - name: Get Release Info
       id: release_info
-      shell: bash
+      uses: actions/github-script@v7
       env:
-        GITHUB_TOKEN: ${{ inputs.github_token }}
         RELEASE_NUMBER: ${{ inputs.release_number }}
-      run: |
-        echo "Fetching release information for ID: $RELEASE_NUMBER"
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const releaseNumber = process.env.RELEASE_NUMBER;
+          console.log(`🔍 Fetching release information for ID: ${releaseNumber}`);
 
-        # Use GH CLI to retrieve release by ID
-        gh release view "$RELEASE_NUMBER" --json body,name,url > RELEASE_NOTES.json
+          // Make the GET /releases/{id} call using Octokit (github-script gives us the pre-authenticated client)
+          const release = await github.rest.repos.getRelease({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            release_id: Number(releaseNumber),
+          });
 
-        # Escape double quotes in the body so we can embed it safely in JSON
-        BODY_ESCAPED=$(echo "$RAW_BODY" | sed 's/"/\\"/g; s/$/\\n/g')
-        {
-          echo 'BODY<<EOF'
-          jq "$BODY_ESCAPED"
-          echo 'EOF'
-          echo "NAME=$(jq -r '.name' RELEASE_NOTES.json)"
-          echo "URL=$(jq -r '.url' RELEASE_NOTES.json)"
-        } >> "$GITHUB_OUTPUT"
+          // Escape double quotes and newlines in the body
+          const rawBody = release.data.body ?? "";
+          const bodyEscaped = rawBody
+            .replace(/"/g, '\\"')
+            .replace(/\n/g, '\\n');
+
+          // Set outputs
+          core.setOutput("BODY", bodyEscaped);
+          core.setOutput("NAME", release.data.name);
+          core.setOutput("URL", release.data.url);
 
     - name: Send Slack Notification
       uses: slackapi/slack-github-action@v2.0.0

@@ -47,6 +47,7 @@ runs:
           core.setOutput("BODY", bodyEscaped);
           core.setOutput("NAME", release.data.name);
           core.setOutput("URL", release.data.url);
+          core.setOutput('REPO_NAME', context.repo.repo);
 
     - name: Send Slack Notification
       uses: slackapi/slack-github-action@v2.0.0
@@ -63,7 +64,7 @@ runs:
                 "text": {
                   "type": "plain_text",
                   "emoji": true,
-                  "text": "🚀 ${{ steps.release_info.outputs.NAME }}"
+                  "text": "🚀 ${{ steps.release_info.outputs.REPO_NAME }} ${{ steps.release_info.outputs.NAME }}"
                 }
               },
               {

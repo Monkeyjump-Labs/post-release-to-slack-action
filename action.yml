@@ -60,7 +60,10 @@ runs:
             "blocks": [
               {
                 "type": "header",
-                "text": "🚀 ${{ steps.release_info.outputs.NAME }}"
+                "text": {
+                  "type": "mrkdwn",
+                  "text": 🚀 ${{ steps.release_info.outputs.NAME }}"}
+                }
               },
               {
                 "type": "section",

@@ -5,6 +5,9 @@ inputs:
   release_number:
     description: "Release ID or Tag (e.g. '210470574' or '1.1.205')"
     required: true
+  subtitle:
+    description: "The subtitle of the release. It could be an environment variable (eg. stage) or some other detail"
+    required: false
   channel_id:
     description: "Slack channel ID (e.g. C01234567)."
     required: true
@@ -74,6 +77,10 @@ runs:
                   "emoji": true,
                   "text": "🚀 New Release: #️⃣ ${{ steps.release_info.outputs.REPO_NAME }} ${{ steps.release_info.outputs.NAME }}"
                 }
+              },
+              {
+                "type": "markdown",
+                "text": "*${{ inputs.subtitle || '' }}*"
               },
               {
                 "type": "section",

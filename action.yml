@@ -80,7 +80,7 @@ runs:
               },
               {
                 "type": "markdown",
-                "text": "*${{ inputs.subtitle || '' }}*"
+                "text": "**${{ inputs.subtitle || '' }}**"
               },
               {
                 "type": "section",

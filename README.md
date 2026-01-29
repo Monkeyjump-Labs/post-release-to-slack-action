@@ -1,11 +1,12 @@
 # post-release-to-slack-action
-A github action to post a release to slack for easy review.
+
+A GitHub Action to post a release to Slack for easy review.
 
 ## Usage
 
-To use this action, add a github action to your repository that is similar to the below:
+To use this action, add a GitHub Action to your repository that is similar to the below:
 
-```
+```yaml
 - uses: Monkeyjump-Labs/post-release-to-slack-action
   id: post_release_to_slack
   name: Post Release Info to Slack

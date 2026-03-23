@@ -79,8 +79,11 @@ runs:
                 }
               },
               {
-                "type": "markdown",
-                "text": "**${{ inputs.subtitle || '' }}**"
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "**${{ inputs.subtitle || '' }}**"
+                }
               },
               {
                 "type": "section",

@@ -8,7 +8,7 @@ inputs:
   subtitle:
     description: 'The subtitle of the release. It could be an environment variable (eg. stage) or some other detail'
     required: false
-  channel_id:
+  channel:
     description: "Slack channel ID (e.g. C01234567) or channel name (e.g. 'release-notes' or '#release-notes'). Names are resolved to an ID before posting."
     required: true
   github_token:
@@ -65,7 +65,7 @@ runs:
       shell: bash
       env:
         SLACK_BOT_TOKEN: ${{ inputs.slack_bot_token }}
-        CHANNEL_INPUT: ${{ inputs.channel_id }}
+        CHANNEL_INPUT: ${{ inputs.channel }}
       run: |
         set -euo pipefail
 

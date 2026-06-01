@@ -12,7 +12,7 @@ To use this action, add a GitHub Action to your repository that is similar to th
   name: Post Release Info to Slack
   with:
     release_number: ${{ github.event.release.id }}
-    channel_id: C01234567
+    channel: C01234567
     slack_bot_token: ${{ secrets.SLACK_BOT_TOKEN }}
 ```
 
@@ -20,7 +20,7 @@ This will trigger a post to the channel with the release info.
 
 ### Channel ID or name
 
-`channel_id` accepts either a Slack channel ID (e.g. `C01234567`) or a
+`channel` accepts either a Slack channel ID (e.g. `C01234567`) or a
 human-readable channel name (e.g. `release-notes` or `#release-notes`). When a
 name is provided it is resolved to an ID via `conversations.list` before
 posting, so the bot token needs the `channels:read` scope (and `groups:read`

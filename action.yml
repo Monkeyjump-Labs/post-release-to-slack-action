@@ -9,7 +9,7 @@ inputs:
     description: 'The subtitle of the release. It could be an environment variable (eg. stage) or some other detail'
     required: false
   channel_id:
-    description: 'Slack channel ID (e.g. C01234567).'
+    description: "Slack channel ID (e.g. C01234567) or channel name (e.g. 'release-notes' or '#release-notes'). Names are resolved to an ID before posting."
     required: true
   github_token:
     description: 'GITHUB_TOKEN or a repo scoped PAT'
@@ -60,6 +60,61 @@ runs:
           core.setOutput("URL", release.data.url);
           core.setOutput("REPO_NAME", context.repo.repo);
 
+    - name: Resolve Slack Channel
+      id: resolve_channel
+      shell: bash
+      env:
+        SLACK_BOT_TOKEN: ${{ inputs.slack_bot_token }}
+        CHANNEL_INPUT: ${{ inputs.channel_id }}
+      run: |
+        set -euo pipefail
+
+        # Strip an optional leading '#' so '#release-notes' and 'release-notes' behave the same.
+        channel="${CHANNEL_INPUT#\#}"
+
+        # Slack channel/conversation IDs look like C/G/D followed by uppercase alphanumerics.
+        # Anything else is treated as a human-readable channel name and resolved to an ID.
+        if [[ "$channel" =~ ^[CGD][A-Z0-9]{6,}$ ]]; then
+          echo "Input '$channel' looks like a Slack channel ID; using it directly."
+          echo "channel=$channel" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+
+        echo "Resolving Slack channel name '$channel' to an ID..."
+        cursor=""
+        resolved=""
+        while :; do
+          response="$(curl -sS -G 'https://slack.com/api/conversations.list' \
+            -H "Authorization: Bearer ${SLACK_BOT_TOKEN}" \
+            --data-urlencode 'types=public_channel,private_channel' \
+            --data-urlencode 'exclude_archived=true' \
+            --data-urlencode 'limit=1000' \
+            --data-urlencode "cursor=${cursor}")"
+
+          if [[ "$(echo "$response" | jq -r '.ok')" != "true" ]]; then
+            echo "::error::Slack API error while listing channels: $(echo "$response" | jq -r '.error // "unknown"')"
+            exit 1
+          fi
+
+          resolved="$(echo "$response" | jq -r --arg name "$channel" '.channels[] | select(.name == $name) | .id' | head -n1)"
+          if [[ -n "$resolved" ]]; then
+            break
+          fi
+
+          cursor="$(echo "$response" | jq -r '.response_metadata.next_cursor // ""')"
+          if [[ -z "$cursor" ]]; then
+            break
+          fi
+        done
+
+        if [[ -z "$resolved" ]]; then
+          echo "::error::Could not find a Slack channel named '$channel'. Make sure the name is correct and the bot can see the channel (channels:read / groups:read scopes)."
+          exit 1
+        fi
+
+        echo "Resolved channel '$channel' to ID '$resolved'."
+        echo "channel=$resolved" >> "$GITHUB_OUTPUT"
+
     - name: Send Slack Notification
       uses: slackapi/slack-github-action@v2.0.0
       with:
@@ -67,7 +122,7 @@ runs:
         token: ${{ inputs.slack_bot_token }}
         payload: |
           {
-            "channel": "${{ inputs.channel_id }}",
+            "channel": "${{ steps.resolve_channel.outputs.channel }}",
             "text": "🚀 New Release",
             "blocks": [
               {
